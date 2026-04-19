@@ -8,6 +8,15 @@
 import SwiftUI
 import MapKit
 
+struct Adventure: Identifiable {
+    let id = UUID()
+    let title: String
+    let description: String
+    let category: Category
+    let effortLevel: EffortLevel
+    var isComplete: Bool
+}
+
 enum Category: String, CaseIterable, Identifiable {
     case nature = "Nature"
     case urban = "Urban"
@@ -48,11 +57,20 @@ enum EffortLevel: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @State private var cameraPosition: MapCameraPosition = .camera(
-        MapCamera(centerCoordinate: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194), distance: 50000)
+        MapCamera(centerCoordinate: CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1017), distance: 50000)
     )
     @State private var selectedCategories: Set<Category> = Set([Category.culture, Category.nature])
     @State private var selectedEffortLevels: Set<EffortLevel> = Set(EffortLevel.allCases)
     @State private var showingFilters = false
+    
+    // Sample adventure data
+    @State private var sampleAdventure = Adventure(
+        title: "Tower Bridge Sunset Walk",
+        description: "Explore the city and experience the sunset from Tower Bridge.",
+        category: .nature,
+        effortLevel: .low,
+        isComplete: false
+    )
 
     private var allCategoriesSelected: Bool {
         selectedCategories.count == Category.allCases.count
@@ -70,10 +88,17 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            Map(position: $cameraPosition) {
-                Marker("San Francisco", coordinate: CLLocationCoordinate2D(latitude: 37.7749, longitude: -122.4194))
+            ZStack(alignment: .bottom) {
+                Map(position: $cameraPosition) {
+                    Marker("London", coordinate: CLLocationCoordinate2D(latitude: 51.5074, longitude: -0.1017))
+                }
+                .ignoresSafeArea(edges: .bottom)
+                
+                // Floating "Next Adventure" button
+                nextAdventureButton
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
             }
-            .ignoresSafeArea(edges: .bottom)
             .navigationTitle("Micro Adventures")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -174,8 +199,120 @@ struct ContentView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                adventureInfoCard
+            }
         }
         .presentationDetents([.medium, .large])
+    }
+    
+    private var adventureInfoCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Top row: Category and Effort Level pills
+            HStack(spacing: 8) {
+                // Category pill
+                HStack(spacing: 4) {
+                    Image(systemName: sampleAdventure.category.icon)
+                        .font(.caption2)
+                    Text(sampleAdventure.category.rawValue)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.blue.opacity(0.15))
+                .foregroundStyle(.blue)
+                .clipShape(Capsule())
+                
+                // Effort level pill
+                HStack(spacing: 4) {
+                    Image(systemName: sampleAdventure.effortLevel.icon)
+                        .font(.caption2)
+                    Text(sampleAdventure.effortLevel.rawValue)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.orange.opacity(0.15))
+                .foregroundStyle(.orange)
+                .clipShape(Capsule())
+                
+                Spacer()
+            }
+            
+            // Adventure title
+            Text(sampleAdventure.title)
+                .font(.title3)
+                .fontWeight(.bold)
+            
+            // Adventure description
+            Text(sampleAdventure.description)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            
+            // Bottom row: Status button
+            HStack {
+                Spacer()
+                Button {
+                    sampleAdventure.isComplete.toggle()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: sampleAdventure.isComplete ? "checkmark.circle.fill" : "circle")
+                        Text(sampleAdventure.isComplete ? "Completed" : "Mark Complete")
+                            .fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(sampleAdventure.isComplete ? Color.green.opacity(0.15) : Color.gray.opacity(0.1))
+                    .foregroundStyle(sampleAdventure.isComplete ? .green : .primary)
+                    .clipShape(Capsule())
+                }
+            }
+        }
+        .padding(16)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+        .padding(.horizontal)
+        .padding(.top, 8)
+    }
+    
+    private var nextAdventureButton: some View {
+        Button {
+            // Action for next adventure
+            print("Next Adventure tapped")
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                
+                Text("Next Adventure")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                
+                Spacer()
+                
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.title2)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 18)
+            .background(
+                LinearGradient(
+                    colors: [.blue, .purple],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.2), radius: 12, y: 6)
+        }
+        .buttonStyle(.plain)
     }
 }
 
