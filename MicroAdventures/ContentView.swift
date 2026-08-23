@@ -86,6 +86,19 @@ struct ContentView: View {
         selectedEffortLevels.count == EffortLevel.allCases.count
     }
 
+    private func advanceToNextAdventure() {
+        let count = adventures.count
+        guard count > 0 else { return }
+
+        for offset in 1...count {
+            let index = (currentAdventureIndex + offset) % count
+            if !adventures[index].isComplete {
+                currentAdventureIndex = index
+                return
+            }
+        }
+    }
+
     private var activeFilterCount: Int {
         let categoryCount = Category.allCases.count - selectedCategories.count
         let effortCount = EffortLevel.allCases.count - selectedEffortLevels.count
@@ -397,7 +410,7 @@ struct ContentView: View {
                     .background(.white.opacity(0.3))
 
                 Button {
-                    print("Next Adventure tapped")
+                    advanceToNextAdventure()
                 } label: {
                     HStack(spacing: 8) {
                         Text("Next")
