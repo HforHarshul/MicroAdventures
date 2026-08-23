@@ -61,7 +61,6 @@ struct ContentView: View {
     )
     @State private var selectedCategories: Set<Category> = Set([Category.culture, Category.nature])
     @State private var selectedEffortLevels: Set<EffortLevel> = Set(EffortLevel.allCases)
-    @State private var showingFilters = false
     @State private var showingAdventures = false
     
     @State private var currentAdventureIndex = 0
@@ -105,6 +104,12 @@ struct ContentView: View {
         return categoryCount + effortCount
     }
 
+    private var filteredAdventures: [(offset: Int, element: Adventure)] {
+        Array(adventures.enumerated()).filter {
+            selectedCategories.contains($0.element.category) && selectedEffortLevels.contains($0.element.effortLevel)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
@@ -125,18 +130,16 @@ struct ContentView: View {
                         showingAdventures = true
                     } label: {
                         Image(systemName: "list.bullet")
+                            .overlay(alignment: .topTrailing) {
+                                if activeFilterCount > 0 {
+                                    Circle()
+                                        .fill(.blue)
+                                        .frame(width: 8, height: 8)
+                                        .offset(x: 6, y: -4)
+                                }
+                            }
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingFilters = true
-                    } label: {
-                        Image(systemName: activeFilterCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                    }
-                }
-            }
-            .sheet(isPresented: $showingFilters) {
-                filterSheet
             }
             .sheet(isPresented: $showingAdventures) {
                 adventureListSheet
@@ -144,97 +147,6 @@ struct ContentView: View {
         }
     }
 
-    private var filterSheet: some View {
-        NavigationStack {
-            List {
-                Section("Categories") {
-                    Button {
-                        if allCategoriesSelected {
-                            selectedCategories.removeAll()
-                        } else {
-                            selectedCategories = Set(Category.allCases)
-                        }
-                    } label: {
-                        HStack {
-                            Text("Select All")
-                            Spacer()
-                            if allCategoriesSelected {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-
-                    ForEach(Category.allCases) { category in
-                        Button {
-                            if selectedCategories.contains(category) {
-                                selectedCategories.remove(category)
-                            } else {
-                                selectedCategories.insert(category)
-                            }
-                        } label: {
-                            HStack {
-                                Label(category.rawValue, systemImage: category.icon)
-                                Spacer()
-                                if selectedCategories.contains(category) {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Section("Effort Level") {
-                    Button {
-                        if allEffortLevelsSelected {
-                            selectedEffortLevels.removeAll()
-                        } else {
-                            selectedEffortLevels = Set(EffortLevel.allCases)
-                        }
-                    } label: {
-                        HStack {
-                            Text("Select All")
-                            Spacer()
-                            if allEffortLevelsSelected {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-
-                    ForEach(EffortLevel.allCases) { level in
-                        Button {
-                            if selectedEffortLevels.contains(level) {
-                                selectedEffortLevels.remove(level)
-                            } else {
-                                selectedEffortLevels.insert(level)
-                            }
-                        } label: {
-                            HStack {
-                                Label(level.rawValue, systemImage: level.icon)
-                                Spacer()
-                                if selectedEffortLevels.contains(level) {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Filters")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        showingFilters = false
-                    }
-                }
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                adventureInfoCard
-            }
-        }
-        .presentationDetents([.medium, .large])
-    }
-    
     private var adventureInfoCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Top row: Category and Effort Level pills
@@ -312,45 +224,61 @@ struct ContentView: View {
     private var adventureListSheet: some View {
         NavigationStack {
             List {
-                ForEach(Array(adventures.enumerated()), id: \.element.id) { index, adventure in
-                    HStack(spacing: 12) {
-                        Image(systemName: adventure.isComplete ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(adventure.isComplete ? .green : .secondary)
-                            .font(.title3)
+                Section {
+                    filterChipsRow
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(adventure.title)
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .strikethrough(adventure.isComplete)
-                                .foregroundStyle(adventure.isComplete ? .secondary : .primary)
+                if filteredAdventures.isEmpty {
+                    Text("No adventures match the selected filters.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 24)
+                        .listRowSeparator(.hidden)
+                } else {
+                    ForEach(filteredAdventures, id: \.element.id) { index, adventure in
+                        HStack(spacing: 12) {
+                            Image(systemName: adventure.isComplete ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(adventure.isComplete ? .green : .secondary)
+                                .font(.title3)
 
-                            HStack(spacing: 6) {
-                                Label(adventure.category.rawValue, systemImage: adventure.category.icon)
-                                Text("·")
-                                Label(adventure.effortLevel.rawValue, systemImage: adventure.effortLevel.icon)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(adventure.title)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .strikethrough(adventure.isComplete)
+                                    .foregroundStyle(adventure.isComplete ? .secondary : .primary)
+
+                                HStack(spacing: 6) {
+                                    Label(adventure.category.rawValue, systemImage: adventure.category.icon)
+                                    Text("·")
+                                    Label(adventure.effortLevel.rawValue, systemImage: adventure.effortLevel.icon)
+                                }
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                             }
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        }
 
-                        Spacer()
+                            Spacer()
 
-                        if index == currentAdventureIndex {
-                            Text("Current")
-                                .font(.caption2)
-                                .fontWeight(.semibold)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.blue.opacity(0.15))
-                                .foregroundStyle(.blue)
-                                .clipShape(Capsule())
+                            if index == currentAdventureIndex {
+                                Text("Current")
+                                    .font(.caption2)
+                                    .fontWeight(.semibold)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.blue.opacity(0.15))
+                                    .foregroundStyle(.blue)
+                                    .clipShape(Capsule())
+                            }
                         }
+                        .padding(.vertical, 4)
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            .navigationTitle("All Adventures")
+            .navigationTitle("Adventures")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -359,8 +287,87 @@ struct ContentView: View {
                     }
                 }
             }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                adventureInfoCard
+            }
         }
         .presentationDetents([.medium, .large])
+    }
+
+    private var filterChipsRow: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Category")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        filterChip(title: "All", isSelected: allCategoriesSelected) {
+                            selectedCategories = allCategoriesSelected ? [] : Set(Category.allCases)
+                        }
+                        ForEach(Category.allCases) { category in
+                            filterChip(title: category.rawValue, systemImage: category.icon, isSelected: selectedCategories.contains(category)) {
+                                if selectedCategories.contains(category) {
+                                    selectedCategories.remove(category)
+                                } else {
+                                    selectedCategories.insert(category)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Effort")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        filterChip(title: "All", isSelected: allEffortLevelsSelected) {
+                            selectedEffortLevels = allEffortLevelsSelected ? [] : Set(EffortLevel.allCases)
+                        }
+                        ForEach(EffortLevel.allCases) { level in
+                            filterChip(title: level.rawValue, systemImage: level.icon, isSelected: selectedEffortLevels.contains(level)) {
+                                if selectedEffortLevels.contains(level) {
+                                    selectedEffortLevels.remove(level)
+                                } else {
+                                    selectedEffortLevels.insert(level)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 8)
+    }
+
+    @ViewBuilder
+    private func filterChip(title: String, systemImage: String? = nil, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                        .font(.caption2)
+                }
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(isSelected ? Color.blue : Color.gray.opacity(0.15))
+            .foregroundStyle(isSelected ? .white : .primary)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private var nextAdventureButton: some View {
