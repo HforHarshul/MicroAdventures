@@ -62,6 +62,7 @@ struct ContentView: View {
     @State private var selectedCategories: Set<Category> = Set([Category.culture, Category.nature])
     @State private var selectedEffortLevels: Set<EffortLevel> = Set(EffortLevel.allCases)
     @State private var showingFilters = false
+    @State private var showingAdventures = false
     
     @State private var currentAdventureIndex = 0
     @State private var adventures: [Adventure] = [
@@ -108,6 +109,13 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        showingAdventures = true
+                    } label: {
+                        Image(systemName: "list.bullet")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
                         showingFilters = true
                     } label: {
                         Image(systemName: activeFilterCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
@@ -116,6 +124,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingFilters) {
                 filterSheet
+            }
+            .sheet(isPresented: $showingAdventures) {
+                adventureListSheet
             }
         }
     }
@@ -285,6 +296,60 @@ struct ContentView: View {
         .padding(.top, 8)
     }
     
+    private var adventureListSheet: some View {
+        NavigationStack {
+            List {
+                ForEach(Array(adventures.enumerated()), id: \.element.id) { index, adventure in
+                    HStack(spacing: 12) {
+                        Image(systemName: adventure.isComplete ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(adventure.isComplete ? .green : .secondary)
+                            .font(.title3)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(adventure.title)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .strikethrough(adventure.isComplete)
+                                .foregroundStyle(adventure.isComplete ? .secondary : .primary)
+
+                            HStack(spacing: 6) {
+                                Label(adventure.category.rawValue, systemImage: adventure.category.icon)
+                                Text("·")
+                                Label(adventure.effortLevel.rawValue, systemImage: adventure.effortLevel.icon)
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        if index == currentAdventureIndex {
+                            Text("Current")
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.blue.opacity(0.15))
+                                .foregroundStyle(.blue)
+                                .clipShape(Capsule())
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+            .navigationTitle("All Adventures")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        showingAdventures = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
     private var nextAdventureButton: some View {
         Button {
             // Action for next adventure
