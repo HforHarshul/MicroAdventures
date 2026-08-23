@@ -351,38 +351,77 @@ struct ContentView: View {
     }
 
     private var nextAdventureButton: some View {
-        Button {
-            // Action for next adventure
-            print("Next Adventure tapped")
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "sparkles")
-                    .font(.title3)
+        VStack(alignment: .leading, spacing: 0) {
+            // Row 1: Current adventure info
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Current Adventure")
+                    .font(.caption)
                     .fontWeight(.semibold)
-                
-                Text("Next Adventure")
-                    .font(.title3)
+                    .foregroundStyle(.white.opacity(0.75))
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+
+                Text(adventures[currentAdventureIndex].title)
+                    .font(.headline)
                     .fontWeight(.bold)
-                
-                Spacer()
-                
-                Image(systemName: "arrow.right.circle.fill")
-                    .font(.title2)
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
             }
-            .foregroundStyle(.white)
             .padding(.horizontal, 24)
-            .padding(.vertical, 18)
-            .background(
-                LinearGradient(
-                    colors: [.blue, .purple],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: .black.opacity(0.2), radius: 12, y: 6)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+
+            Divider()
+                .background(.white.opacity(0.3))
+
+            // Lower half: two action buttons side by side
+            HStack(spacing: 0) {
+                Button {
+                    print("Mark as Complete tapped")
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.subheadline)
+                        Text("Complete")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 14)
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+
+                Divider()
+                    .frame(height: 20)
+                    .background(.white.opacity(0.3))
+
+                Button {
+                    print("Next Adventure tapped")
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("Next")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.subheadline)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 14)
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+            }
         }
-        .buttonStyle(.plain)
+        .background(
+            LinearGradient(
+                colors: [.blue, .purple],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .black.opacity(0.25), radius: 16, y: 8)
     }
 }
 
