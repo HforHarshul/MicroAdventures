@@ -63,14 +63,19 @@ struct ContentView: View {
     @State private var selectedEffortLevels: Set<EffortLevel> = Set(EffortLevel.allCases)
     @State private var showingFilters = false
     
-    // Sample adventure data
-    @State private var sampleAdventure = Adventure(
-        title: "Tower Bridge Sunset Walk",
-        description: "Explore the city and experience the sunset from Tower Bridge.",
-        category: .nature,
-        effortLevel: .low,
-        isComplete: false
-    )
+    @State private var currentAdventureIndex = 0
+    @State private var adventures: [Adventure] = [
+        Adventure(title: "Tower Bridge Sunset Walk", description: "Stroll across Tower Bridge at golden hour and soak in panoramic views of the Thames.", category: .nature, effortLevel: .low, isComplete: false),
+        Adventure(title: "Borough Market Food Tour", description: "Graze your way through one of London's oldest food markets and try something you've never eaten before.", category: .food, effortLevel: .low, isComplete: false),
+        Adventure(title: "Regent's Park Picnic", description: "Pack a blanket and lunch, find a quiet spot in Regent's Park, and spend an hour completely off your phone.", category: .nature, effortLevel: .low, isComplete: false),
+        Adventure(title: "Brick Lane Street Art Walk", description: "Wander the backstreets of Brick Lane and photograph the ever-changing murals and paste-ups.", category: .urban, effortLevel: .low, isComplete: false),
+        Adventure(title: "Thames Path Morning Jog", description: "Run a stretch of the Thames Path from Waterloo Bridge to Blackfriars and back as the city wakes up.", category: .fitness, effortLevel: .medium, isComplete: false),
+        Adventure(title: "Tate Modern Wander", description: "Spend an hour in the free permanent collection at Tate Modern — no plan, just wander and see what stops you.", category: .culture, effortLevel: .low, isComplete: false),
+        Adventure(title: "Camden Market Exploration", description: "Get lost in Camden's labyrinth of stalls, pick up something bizarre, and grab street food from a vendor you've never tried.", category: .food, effortLevel: .medium, isComplete: false),
+        Adventure(title: "Greenwich Park Hill Climb", description: "Hike up to the Royal Observatory, catch your breath, and take in one of the best skyline views in London.", category: .fitness, effortLevel: .medium, isComplete: false),
+        Adventure(title: "Notting Hill Neighbourhood Wander", description: "Explore the pastel-coloured streets of Notting Hill, duck into independent bookshops and cafés.", category: .urban, effortLevel: .low, isComplete: false),
+        Adventure(title: "Open Mic Night in Soho", description: "Find an open mic night in a Soho pub, order a drink, and cheer on strangers performing for the first time.", category: .social, effortLevel: .medium, isComplete: false),
+    ]
 
     private var allCategoriesSelected: Bool {
         selectedCategories.count == Category.allCases.count
@@ -212,9 +217,9 @@ struct ContentView: View {
             HStack(spacing: 8) {
                 // Category pill
                 HStack(spacing: 4) {
-                    Image(systemName: sampleAdventure.category.icon)
+                    Image(systemName: adventures[currentAdventureIndex].category.icon)
                         .font(.caption2)
-                    Text(sampleAdventure.category.rawValue)
+                    Text(adventures[currentAdventureIndex].category.rawValue)
                         .font(.caption)
                         .fontWeight(.medium)
                 }
@@ -226,9 +231,9 @@ struct ContentView: View {
                 
                 // Effort level pill
                 HStack(spacing: 4) {
-                    Image(systemName: sampleAdventure.effortLevel.icon)
+                    Image(systemName: adventures[currentAdventureIndex].effortLevel.icon)
                         .font(.caption2)
-                    Text(sampleAdventure.effortLevel.rawValue)
+                    Text(adventures[currentAdventureIndex].effortLevel.rawValue)
                         .font(.caption)
                         .fontWeight(.medium)
                 }
@@ -242,12 +247,12 @@ struct ContentView: View {
             }
             
             // Adventure title
-            Text(sampleAdventure.title)
+            Text(adventures[currentAdventureIndex].title)
                 .font(.title3)
                 .fontWeight(.bold)
             
             // Adventure description
-            Text(sampleAdventure.description)
+            Text(adventures[currentAdventureIndex].description)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
@@ -256,18 +261,18 @@ struct ContentView: View {
             HStack {
                 Spacer()
                 Button {
-                    sampleAdventure.isComplete.toggle()
+                    adventures[currentAdventureIndex].isComplete.toggle()
                 } label: {
                     HStack(spacing: 6) {
-                        Image(systemName: sampleAdventure.isComplete ? "checkmark.circle.fill" : "circle")
-                        Text(sampleAdventure.isComplete ? "Completed" : "Mark Complete")
+                        Image(systemName: adventures[currentAdventureIndex].isComplete ? "checkmark.circle.fill" : "circle")
+                        Text(adventures[currentAdventureIndex].isComplete ? "Completed" : "Mark Complete")
                             .fontWeight(.semibold)
                     }
                     .font(.subheadline)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 10)
-                    .background(sampleAdventure.isComplete ? Color.green.opacity(0.15) : Color.gray.opacity(0.1))
-                    .foregroundStyle(sampleAdventure.isComplete ? .green : .primary)
+                    .background(adventures[currentAdventureIndex].isComplete ? Color.green.opacity(0.15) : Color.gray.opacity(0.1))
+                    .foregroundStyle(adventures[currentAdventureIndex].isComplete ? .green : .primary)
                     .clipShape(Capsule())
                 }
             }
