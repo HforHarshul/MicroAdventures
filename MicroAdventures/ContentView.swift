@@ -377,12 +377,12 @@ struct ContentView: View {
             // Lower half: two action buttons side by side
             HStack(spacing: 0) {
                 Button {
-                    print("Mark as Complete tapped")
+                    adventures[currentAdventureIndex].isComplete.toggle()
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
+                        Image(systemName: adventures[currentAdventureIndex].isComplete ? "checkmark.circle.fill" : "circle")
                             .font(.subheadline)
-                        Text("Complete")
+                        Text(adventures[currentAdventureIndex].isComplete ? "Completed" : "Complete")
                             .font(.subheadline)
                             .fontWeight(.bold)
                     }
